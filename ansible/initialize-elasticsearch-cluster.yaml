@@ -1,0 +1,90 @@
+---
+- name: install elasticsearch
+  hosts: elastic_search
+  become: yes
+  become_user: root
+  tasks:
+    - name: Download rpm file from server
+      ansible.builtin.get_url:
+        url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.4.2-x86_64.rpm
+        dest: /tmp/elasticsearch-8.4.2-x86_64.rpm
+        mode: 0644
+        owner: huray
+        validate_certs: no
+    - name: Install package
+      yum:
+        name: /tmp/elasticsearch-8.4.2-x86_64.rpm
+        state: present
+    - name: Check working directory exists
+      ansible.builtin.stat:
+        path: /elk-stack
+      register: workdir
+    - name: If directory already existed
+      debug:
+        msg: /elk-stack is already existed
+      when: workdir.stat.exists
+    - name: Create workdir if not exists
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        mode: 0755
+        group: huray
+        owner: huray
+      with_items:
+        - "/elk-stack"
+        - "/elk-stack/bin"
+        - "/elk-stack/etc"
+        - "/elk-stack/var"
+      when: workdir.stat.exists == false
+- name: Copy elastic search main config files
+  hosts: elasticsearch01
+  become: yes
+  become_user: root
+  tasks:
+    - name: Copy elastic search main config files
+      ansible.builtin.copy:
+        src: "../elasticsearch/config/dev/es01.yml"
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        mode: 0644
+        owner: root
+        group: elasticsearch
+- name: Copy elastic search main config files
+  hosts: elasticsearch01
+  become: yes
+  become_user: root
+  tasks:
+    - name: Copy elastic search main config files
+      ansible.builtin.copy:
+        src: "../elasticsearch/config/dev/es02.yml"
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        mode: 0644
+        owner: root
+        group: elasticsearch
+- name: Copy elastic search main config files
+  hosts: elasticsearch01
+  become: yes
+  become_user: root
+  tasks:
+    - name: Copy elastic search main config files
+      ansible.builtin.copy:
+        src: "../elasticsearch/config/dev/es03.yml"
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        mode: 0644
+        owner: root
+        group: elasticsearch
+- name: Restart all elasticsearch
+  hosts: elastic_search
+  become: yes
+  become_user: root
+  tasks:
+    - name: Replace service
+      ansible.builtin.copy:
+        src: "../elasticsearch/config/dev/elasticsearch.service"
+        dest: /usr/lib/systemd/system/elasticsearch.service"
+        owner: root
+        group: root
+    - name: Reload daemon
+      ansible.builtin.shell: systemctl daemon-reload
+    - name: Restart Elasticsearch
+      ansible.builtin.shell: systemctl restart elasticsearch
+

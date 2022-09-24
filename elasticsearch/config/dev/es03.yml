@@ -1,0 +1,15 @@
+---
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+cluster.name: elk-stack
+node.name: elasticsearch01
+network.bind_host: 0.0.0.0
+network.publish_host: REPLACE_HOST # e.g. 10.10.1.3
+http.port: 9200
+discovery.seed_hosts: REPLACE_HOST # ["10.10.1.1","10.10.1.2"]
+cluster.initial_master_nodes: REPLACE_HOST # ["10.10.1.1","10.10.1.2","10.10.1.3"]
+bootstrap.memory_lock: true
+xpack.security.enabled: false
+xpack.security.transport.ssl.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.license.self_generated.type: basic

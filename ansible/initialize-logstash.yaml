@@ -1,0 +1,57 @@
+---
+- name: install logstash
+  hosts: logstash
+  become: yes
+  become_user: root
+  tasks:
+    - name: Download rpm file from server
+      ansible.builtin.get_url:
+        url: https://artifacts.elastic.co/downloads/logstash/logstash-8.4.2-x86_64.rpm
+        dest: /tmp/logstash-8.4.2-x86_64.rpm
+        mode: 0644
+        owner: huray
+        validate_certs: no
+    - name: Install package
+      yum:
+        name: /tmp/logstash-8.4.2-x86_64.rpm
+        state: present
+    - name: Check working directory exists
+      ansible.builtin.stat:
+        path: /elk-stack
+      register: workdir
+    - name: If directory already existed
+      debug:
+        msg: /elk-stack is already existed
+      when: workdir.stat.exists
+    - name: Create workdir if not exists
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        mode: 0755
+        group: huray
+        owner: huray
+      with_items:
+        - "/elk-stack"
+        - "/elk-stack/bin"
+        - "/elk-stack/etc"
+        - "/elk-stack/var"
+      when: workdir.stat.exists == false
+    - name: Copy logstash main config files
+      ansible.builtin.copy:
+        src: "../logstash/config/dev/logstash.yml"
+        dest: "/etc/logstash/logstash.yml"
+        mode: 0644
+        owner: root
+        group: root
+    - name: Copy pipeline settings
+      ansible.builtin.copy:
+        src: "../logstash/pipeline/dev/logstash.conf"
+        dest: "/etc/logstash/conf.d/logstash.conf"
+        mode: 0644
+        owner: root
+        group: root
+    - name: Reload daemon
+      ansible.builtin.shell: systemctl daemon-reload
+    - name: Restart logstash
+      ansible.builtin.shell: systemctl restart logstash
+
